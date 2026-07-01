@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Shop All — HASSAN</title>
+<meta name="description" content="Shop the full Hassan collection — outerwear, shirts, knitwear, trousers, denim, and accessories."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/tokens.css"/>
+<link rel="stylesheet" href="css/layout.css"/>
+<link rel="stylesheet" href="css/product.css"/>
+<style>
+  .shop-header { padding: var(--sp-12) var(--sp-6) var(--sp-6); border-bottom: 1px solid var(--hairline); }
+  .shop-body { display: grid; grid-template-columns: 260px 1fr; gap: var(--sp-8); padding: var(--sp-8) var(--sp-6); max-width: 1400px; margin: 0 auto; }
+
+  .filter-rail { position: sticky; top: 100px; align-self: start; max-height: calc(100vh - 120px); overflow-y: auto; }
+  .filter-group { border-bottom: 1px solid var(--hairline); padding: var(--sp-4) 0; }
+  .filter-group h4 { font-size: 0.84rem; font-weight: 600; margin-bottom: var(--sp-3); }
+  .filter-checkbox { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; cursor: pointer; margin-bottom: var(--sp-2); color: var(--text); }
+  .filter-checkbox input { accent-color: var(--gold); width: 15px; height: 15px; }
+  .filter-checkbox .count { color: var(--text-dim); margin-left: auto; font-size: 0.74rem; }
+
+  .filter-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--hairline); cursor: pointer; transition: border-color var(--t-fast); }
+  .filter-swatch.active { border-color: var(--gold); }
+
+  .filter-sizes { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-size-btn { width: 36px; height: 32px; border: 1px solid var(--hairline); border-radius: var(--radius-sm); font-size: 0.76rem; color: var(--text); transition: all var(--t-fast); }
+  .filter-size-btn.active { background: var(--gold); color: var(--void); border-color: var(--gold); }
+
+  .price-range { display: flex; align-items: center; gap: 8px; }
+  .price-range input[type=number] { width: 64px; border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 6px 8px; font-size: 0.78rem; background: var(--void); color: var(--text); }
+
+  .stars-filter { display: flex; flex-direction: column; gap: 6px; }
+  .stars-filter button { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-dim); }
+  .stars-filter button.active, .stars-filter button:hover { color: var(--text); }
+  .star-row { color: var(--gold); letter-spacing: 1px; }
+  .clear-filters { font-size: 0.76rem; color: var(--text-dim); text-decoration: underline; margin-top: var(--sp-2); }
+
+  .shop-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-6); gap: var(--sp-4); flex-wrap: wrap; }
+  .shop-search { position: relative; flex: 1; max-width: 320px; }
+  .shop-search input { width: 100%; padding: 11px 14px 11px 36px; border: 1px solid var(--hairline); border-radius: var(--radius-pill); font-size: 0.84rem; background: var(--surface); color: var(--text); }
+  .shop-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-dim); }
+  .shop-result-count { font-size: 0.8rem; color: var(--text-dim); }
+  .shop-sort select { border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 0.8rem; background: var(--surface); color: var(--text); }
+  .mobile-filter-btn { display: none; }
+
+  .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-5) var(--sp-4); }
+  .empty-state { text-align: center; padding: var(--sp-24) var(--sp-6); grid-column: 1/-1; }
+
+  .load-more-wrap { text-align: center; margin-top: var(--sp-12); }
+
+  @media (max-width: 1024px) {
+    .shop-body { grid-template-columns: 1fr; }
+    .filter-rail { display: none; position: fixed; top: 0; left: 0; bottom: 0; width: min(320px,86vw); background: var(--surface); z-index: 400; padding: var(--sp-6); transform: translateX(-100%); transition: transform var(--t-slow); border-right: 1px solid var(--hairline); }
+    .filter-rail.open { display: block; transform: translateX(0); }
+    .mobile-filter-btn { display: inline-flex; }
+    .result-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div id="h-nav-mount"></div>
+
+<div class="shop-header wrap">
+  <p class="eyebrow" id="shop-eyebrow">Shop</p>
+  <h1 class="h-display-lg" id="shop-title">All Products</h1>
+</div>
+
+<div class="shop-body">
+  <aside class="filter-rail" id="filter-rail">
+    <div class="filter-group"><h4>Category</h4><div id="filter-category"></div></div>
+    <div class="filter-group">
+      <h4>Price</h4>
+      <div class="price-range">
+        <input type="number" id="price-min" placeholder="Min"/><span class="text-dim">–</span>
+        <input type="number" id="price-max" placeholder="Max"/>
+        <button class="btn btn-sm btn-line" id="apply-price">Go</button>
+      </div>
+    </div>
+    <div class="filter-group"><h4>Size</h4><div class="filter-sizes" id="filter-sizes"></div></div>
+    <div class="filter-group"><h4>Color</h4><div class="filter-swatches" id="filter-colors"></div></div>
+    <div class="filter-group"><h4>Rating</h4><div class="stars-filter" id="filter-rating"></div></div>
+    <div class="filter-group">
+      <h4>Availability</h4>
+      <label class="filter-checkbox"><input type="checkbox" id="filter-instock"/> In stock only</label>
+    </div>
+    <button class="clear-filters" id="clear-filters">Clear all filters</button>
+  </aside>
+
+  <main>
+    <div class="shop-toolbar">
+      <button class="btn btn-line btn-sm mobile-filter-btn" id="open-filter-mobile">Filters</button>
+      <div class="shop-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="text" id="search-input" placeholder="Search products..."/>
+      </div>
+      <span class="shop-result-count" id="result-count"></span>
+      <div class="shop-sort">
+        <select id="sort-select">
+          <option value="newest">Newest</option>
+          <option value="popular">Most Popular</option>
+          <option value="rating">Best Rated</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="result-grid" id="result-grid"></div>
+    <div class="load-more-wrap" id="load-more-wrap"><button class="btn btn-line" id="load-more-btn">Load more</button></div>
+  </main>
+</div>
+<div class="h-drawer-overlay" id="filter-overlay" style="display:none;"></div>
+
+<div id="h-footer-mount"></div>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/quickselect.js"></script>
+<script>
+  hMountLayout();
+
+  const PAGE_SIZE = 9;
+  let state = { q:'', categories:[], sizes:[], colors:[], minRating:0, inStock:false, priceMin:null, priceMax:null, sort:'newest', page:1 };
+  const params = new URLSearchParams(window.location.search);
+  const cat = params.get('cat');
+  const filterPreset = params.get('filter');
+  if (cat) state.categories = [cat];
+  if (filterPreset === 'new') document.getElementById('shop-title').textContent = 'New Arrivals';
+  if (filterPreset === 'sale') document.getElementById('shop-title').textContent = 'Sale';
+  if (filterPreset === 'best') document.getElementById('shop-title').textContent = 'Best Sellers';
+  if (cat) document.getElementById('shop-title').textContent = H_CATEGORIES.find(c=>c.slug===cat)?.name || 'Shop';
+
+  document.getElementById('filter-category').innerHTML = H_CATEGORIES.map(c => `
+    <label class="filter-checkbox"><input type="checkbox" value="${c.slug}" data-filter="category" ${state.categories.includes(c.slug)?'checked':''}/> ${c.name} <span class="count">${H_PRODUCTS.filter(p=>p.category===c.slug).length}</span></label>`).join('');
+  document.getElementById('filter-sizes').innerHTML = H_SIZES.map(s => `<button class="filter-size-btn" data-size="${s}">${s}</button>`).join('');
+  document.getElementById('filter-colors').innerHTML = Object.entries(H_COLORS).map(([name,hex]) => `<button class="filter-swatch" style="background:${hex}" data-color="${name}" title="${name}"></button>`).join('');
+  document.getElementById('filter-rating').innerHTML = [4,3,2].map(r => `<button data-rating="${r}"><span class="star-row">${'★'.repeat(r)}${'☆'.repeat(5-r)}</span> & up</button>`).join('');
+
+  document.querySelectorAll('[data-filter="category"]').forEach(cb => cb.addEventListener('change', () => {
+    state.categories = [...document.querySelectorAll('[data-filter="category"]:checked')].map(c => c.value);
+    state.page = 1; render();
+  }));
+  document.querySelectorAll('.filter-size-btn').forEach(btn => btn.addEventListener('click', () => {
+    btn.classList.toggle('active'); state.sizes = [...document.querySelectorAll('.filter-size-btn.active')].map(b => b.dataset.size); state.page=1; render();
+  }));
+  document.querySelectorAll('.filter-swatch').forEach(btn => btn.addEventListener('click', () => {
+    btn.classList.toggle('active'); state.colors = [...document.querySelectorAll('.filter-swatch.active')].map(b => b.dataset.color); state.page=1; render();
+  }));
+  document.querySelectorAll('[data-rating]').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-rating]').forEach(b=>b.classList.remove('active'));
+    const reselect = state.minRating === parseInt(btn.dataset.rating);
+    state.minRating = reselect ? 0 : parseInt(btn.dataset.rating);
+    if (!reselect) btn.classList.add('active');
+    state.page=1; render();
+  }));
+  document.getElementById('filter-instock').addEventListener('change', e => { state.inStock = e.target.checked; state.page=1; render(); });
+  document.getElementById('apply-price').addEventListener('click', () => {
+    state.priceMin = document.getElementById('price-min').value ? parseFloat(document.getElementById('price-min').value) : null;
+    state.priceMax = document.getElementById('price-max').value ? parseFloat(document.getElementById('price-max').value) : null;
+    state.page=1; render();
+  });
+  document.getElementById('clear-filters').addEventListener('click', () => {
+    state = { q:'', categories:[], sizes:[], colors:[], minRating:0, inStock:false, priceMin:null, priceMax:null, sort:state.sort, page:1 };
+    document.querySelectorAll('[data-filter="category"]').forEach(cb=>cb.checked=false);
+    document.querySelectorAll('.filter-size-btn,.filter-swatch,[data-rating]').forEach(b=>b.classList.remove('active'));
+    document.getElementById('filter-instock').checked=false;
+    document.getElementById('price-min').value=''; document.getElementById('price-max').value='';
+    render();
+  });
+
+  let searchTimer;
+  document.getElementById('search-input').addEventListener('input', e => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { state.q = e.target.value.trim().toLowerCase(); state.page=1; render(); }, 180);
+  });
+  document.getElementById('sort-select').addEventListener('change', e => { state.sort = e.target.value; state.page=1; render(); });
+
+  const rail = document.getElementById('filter-rail'); const overlay = document.getElementById('filter-overlay');
+  document.getElementById('open-filter-mobile').addEventListener('click', () => { rail.classList.add('open'); overlay.style.display='block'; });
+  overlay.addEventListener('click', () => { rail.classList.remove('open'); overlay.style.display='none'; });
+
+  function hCardHTML(p){
+    const wished = HStore.isWishlisted(p.id);
+    return `
+    <div class="h-card" data-product="${p.id}">
+      <div class="h-card-img-wrap" onclick="window.location.href='product.html?slug=${p.slug}'">
+        <img src="${p.images[0]}" alt="${p.name}" loading="lazy"/>
+        <div class="h-card-tags">${p.isNew?'<span class="h-tag new">New</span>':''}${p.compareAt?'<span class="h-tag sale">Sale</span>':''}</div>
+        <div class="h-card-quickselect"><button onclick="event.stopPropagation(); hOpenQuickSelect('${p.id}')">Quick Select</button></div>
+      </div>
+      <button class="h-card-wishlist ${wished?'active':''}" aria-label="Wishlist" onclick="hToggleCardWishlist(event,'${p.id}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EDEDED" stroke-width="1.5"><path d="M12 20s-7-4.3-9.3-8.8C1.2 8 2.6 4.8 6 4.4c2-.2 3.6.9 6 3.4 2.4-2.5 4-3.6 6-3.4 3.4.4 4.8 3.6 3.3 6.8C19 15.7 12 20 12 20z"/></svg>
+      </button>
+      <div class="h-card-info">
+        <a href="product.html?slug=${p.slug}"><p class="h-card-name">${p.name}</p></a>
+        <div class="h-card-meta"><span class="h-price">${hPrice(p.price)}${p.compareAt?`<span class="compare">${hPrice(p.compareAt)}</span>`:''}</span><span class="h-rating">★ ${p.rating}</span></div>
+      </div>
+    </div>`;
+  }
+  function hToggleCardWishlist(e, id){ e.preventDefault(); e.stopPropagation(); const now = HStore.toggleWishlist(id); HStore.toast(now?'Added to wishlist':'Removed from wishlist','success'); e.currentTarget.classList.toggle('active', now); }
+
+  function filterProducts(){
+    let list = H_PRODUCTS.slice();
+    if (filterPreset === 'new') list = list.filter(p => p.isNew);
+    if (filterPreset === 'sale') list = list.filter(p => p.compareAt);
+    if (filterPreset === 'best') list = list.filter(p => p.isBestSeller);
+    if (state.q) list = list.filter(p => p.name.toLowerCase().includes(state.q) || p.category.includes(state.q));
+    if (state.categories.length) list = list.filter(p => state.categories.includes(p.category));
+    if (state.sizes.length) list = list.filter(p => p.sizes.some(s => state.sizes.includes(s.label) && s.stock>0));
+    if (state.colors.length) list = list.filter(p => p.colors.some(c => state.colors.includes(c.name)));
+    if (state.minRating) list = list.filter(p => p.rating >= state.minRating);
+    if (state.inStock) list = list.filter(p => p.sizes.some(s => s.stock>0));
+    if (state.priceMin != null) list = list.filter(p => p.price >= state.priceMin);
+    if (state.priceMax != null) list = list.filter(p => p.price <= state.priceMax);
+    switch(state.sort){
+      case 'popular': list.sort((a,b)=>b.reviewCount-a.reviewCount); break;
+      case 'rating': list.sort((a,b)=>b.rating-a.rating); break;
+      case 'price-asc': list.sort((a,b)=>a.price-b.price); break;
+      case 'price-desc': list.sort((a,b)=>b.price-a.price); break;
+    }
+    if (state.sort === 'newest') list.sort((a,b)=>(b.isNew?1:0)-(a.isNew?1:0));
+    return list;
+  }
+
+  function render(){
+    const filtered = filterProducts();
+    const shown = filtered.slice(0, state.page*PAGE_SIZE);
+    const grid = document.getElementById('result-grid');
+    document.getElementById('result-count').textContent = `${filtered.length} product${filtered.length===1?'':'s'}`;
+    if (filtered.length === 0){
+      grid.innerHTML = `<div class="empty-state"><p class="h-display-md">No products match those filters</p><p class="text-dim" style="margin-bottom:var(--sp-6);">Try removing a filter or searching for something else.</p><button class="btn btn-line" onclick="document.getElementById('clear-filters').click()">Clear all filters</button></div>`;
+      document.getElementById('load-more-wrap').style.display='none';
+      return;
+    }
+    grid.innerHTML = shown.map(hCardHTML).join('');
+    document.getElementById('load-more-wrap').style.display = shown.length < filtered.length ? 'block' : 'none';
+  }
+  document.getElementById('load-more-btn').addEventListener('click', () => { state.page++; render(); });
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+/* ============================================================
+   HASSAN — Product Card + Quick Select Overlay (signature element)
+============================================================ */
+
+/* ---------- Product card ---------- */
+.h-card { position: relative; display: flex; flex-direction: column; }
+.h-card-img-wrap { position: relative; aspect-ratio: 3/4; overflow: hidden; background: var(--surface); border-radius: var(--radius-md); cursor: pointer;}
+.h-card-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--t-slow); }
+.h-card:hover .h-card-img-wrap img { transform: scale(1.05); }
+
+.h-card-tags { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; z-index: 2; }
+.h-tag { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.05em; padding: 4px 9px; border-radius: var(--radius-pill); background: var(--void); color: var(--text); border: 1px solid var(--hairline); }
+.h-tag.sale { background: var(--gold); color: var(--void); border-color: var(--gold); }
+.h-tag.new { background: var(--text); color: var(--void); }
+
+.h-card-wishlist { position: absolute; top: 10px; right: 10px; z-index: 3; width: 32px; height: 32px; border-radius: 50%; background: rgba(10,10,11,.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; transition: transform var(--t-fast); }
+.h-card-wishlist:hover { transform: scale(1.1); }
+.h-card-wishlist.active svg { fill: var(--gold); stroke: var(--gold); }
+
+/* Quick-select trigger that appears on hover over the image */
+.h-card-quickselect {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 3;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity var(--t-fast), transform var(--t-fast);
+}
+.h-card:hover .h-card-quickselect { opacity: 1; transform: translateY(0); }
+.h-card-quickselect button {
+  width: 100%; background: rgba(10,10,11,.82); backdrop-filter: blur(6px);
+  border: 1px solid var(--gold); color: var(--gold);
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 11px; border-radius: var(--radius-sm);
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.h-card-quickselect button:hover { background: var(--gold); color: var(--void); }
+
+.h-card-info { padding-top: var(--sp-3); }
+.h-card-name { font-size: 0.88rem; font-weight: 500; margin-bottom: 4px; }
+.h-card-meta { display: flex; align-items: center; justify-content: space-between; }
+.h-price { font-family: var(--font-mono); font-size: 0.86rem; color: var(--gold); }
+.h-price .compare { color: var(--text-dim); text-decoration: line-through; margin-left: 6px; font-size: 0.76rem; }
+.h-rating { font-size: 0.74rem; color: var(--text-dim); }
+
+@media (hover: none) {
+  .h-card-quickselect { opacity: 1; transform: none; position: static; margin-top: 8px; }
+}
+
+/* ============================================================
+   QUICK SELECT OVERLAY
+   Semi-transparent scrim + slide-up panel — central interaction.
+============================================================ */
+.qs-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(10,10,11,.78);
+  backdrop-filter: blur(3px);
+  opacity: 0; visibility: hidden;
+  transition: opacity var(--t-med), visibility var(--t-med);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.qs-overlay.open { opacity: 1; visibility: visible; }
+
+.qs-panel {
+  width: 100%; max-width: 640px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  max-height: 88vh; overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform var(--t-slow);
+  box-shadow: var(--shadow-elevated);
+}
+.qs-overlay.open .qs-panel { transform: translateY(0); }
+
+@media (min-width: 720px) {
+  .qs-overlay { align-items: center; }
+  .qs-panel { border-radius: 16px; border-bottom: 1px solid var(--hairline); transform: translateY(24px) scale(.98); opacity: 0; }
+  .qs-overlay.open .qs-panel { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.qs-panel-drag { width: 40px; height: 4px; background: var(--hairline); border-radius: 4px; margin: 12px auto 4px; }
+@media (min-width: 720px) { .qs-panel-drag { display: none; } }
+
+.qs-close { position: absolute; top: 16px; right: 16px; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; color: var(--text); z-index: 2; }
+.qs-close:hover { background: var(--surface-3); color: var(--gold); }
+
+.qs-body { padding: var(--sp-6) var(--sp-6) var(--sp-8); display: grid; grid-template-columns: 140px 1fr; gap: var(--sp-6); position: relative; }
+.qs-thumb { width: 100%; aspect-ratio: 3/4; border-radius: var(--radius-md); overflow: hidden; background: var(--void); }
+.qs-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.qs-eyebrow { margin-bottom: var(--sp-1); }
+.qs-name { font-family: var(--font-display); font-size: 1.5rem; text-transform: uppercase; margin-bottom: var(--sp-2); line-height: 1.05; }
+.qs-price-row { display: flex; align-items: baseline; gap: var(--sp-2); margin-bottom: var(--sp-5); }
+.qs-price { font-family: var(--font-mono); color: var(--gold); font-size: 1.05rem; }
+.qs-compare { font-family: var(--font-mono); color: var(--text-dim); text-decoration: line-through; font-size: 0.88rem; }
+
+.qs-field { margin-bottom: var(--sp-5); }
+.qs-field-label { display: flex; justify-content: space-between; font-size: 0.76rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-dim); margin-bottom: var(--sp-3); }
+.qs-field-label .val { color: var(--text); }
+
+.qs-colors { display: flex; gap: var(--sp-2); }
+.qs-color-swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: border-color var(--t-fast), transform var(--t-fast); }
+.qs-color-swatch.active { border-color: var(--gold); transform: scale(1.08); }
+
+.qs-sizes { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--sp-2); }
+.qs-size-btn { padding: 11px 0; border: 1px solid var(--hairline); border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 500; color: var(--text); transition: all var(--t-fast); position: relative; }
+.qs-size-btn:hover:not(.oos) { border-color: var(--gold); color: var(--gold); }
+.qs-size-btn.active { background: var(--gold); color: var(--void); border-color: var(--gold); font-weight: 700; }
+.qs-size-btn.oos { color: var(--hairline); cursor: not-allowed; }
+.qs-size-btn.oos::after { content:''; position:absolute; left:10%; right:10%; top:50%; height:1px; background: var(--hairline); }
+.qs-stock-note { font-size: 0.74rem; color: var(--text-dim); margin-top: var(--sp-2); }
+.qs-stock-note.low { color: var(--gold); }
+
+.qs-qty-row { display: flex; align-items: center; gap: var(--sp-4); }
+.qs-qty-stepper { display: flex; align-items: center; border: 1px solid var(--hairline); border-radius: var(--radius-sm); }
+.qs-qty-stepper button { width: 36px; height: 38px; color: var(--text); }
+.qs-qty-stepper button:hover { color: var(--gold); }
+.qs-qty-stepper span { width: 34px; text-align: center; font-family: var(--font-mono); font-size: 0.86rem; }
+
+.qs-note-wrap textarea {
+  width: 100%; background: var(--void); border: 1px solid var(--hairline); border-radius: var(--radius-sm);
+  padding: 12px 14px; font-size: 0.84rem; color: var(--text); resize: vertical; min-height: 64px;
+  transition: border-color var(--t-fast);
+}
+.qs-note-wrap textarea:focus { border-color: var(--gold); outline: none; }
+.qs-note-wrap textarea::placeholder { color: var(--text-dim); }
+.qs-note-hint { font-size: 0.7rem; color: var(--text-dim); margin-top: 6px; }
+
+.qs-cta-row { display: flex; gap: var(--sp-3); margin-top: var(--sp-6); }
+.qs-wishlist-btn { width: 52px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--hairline); border-radius: var(--radius-sm); transition: border-color var(--t-fast); }
+.qs-wishlist-btn.active { border-color: var(--gold); }
+.qs-wishlist-btn.active svg { fill: var(--gold); stroke: var(--gold); }
+
+.qs-view-full { display: block; text-align: center; margin-top: var(--sp-4); font-size: 0.78rem; color: var(--text-dim); text-decoration: underline; }
+.qs-view-full:hover { color: var(--gold); }
+
+@media (max-width: 600px) {
+  .qs-body { grid-template-columns: 1fr; padding: var(--sp-4) var(--sp-5) var(--sp-8); }
+  .qs-thumb { max-width: 140px; }
+}

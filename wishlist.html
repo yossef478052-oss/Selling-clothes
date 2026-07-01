@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Favorites — HASSAN</title>
+<meta name="description" content="Your saved favorites at HASSAN — every item you've marked with the heart icon, all in one place."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/tokens.css"/>
+<link rel="stylesheet" href="css/layout.css"/>
+<link rel="stylesheet" href="css/product.css"/>
+<style>
+  .fav-header { padding: var(--sp-10) var(--sp-6) var(--sp-6); border-bottom: 1px solid var(--hairline); display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-4); flex-wrap: wrap; }
+  .fav-header .eyebrow { margin-bottom: var(--sp-2); }
+  .fav-count-pill { font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-dim); border: 1px solid var(--hairline); padding: 6px 12px; border-radius: var(--radius-pill); }
+
+  .fav-body { max-width: 1400px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-24); }
+  .fav-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-5) var(--sp-4); }
+  @media (max-width: 1024px) { .fav-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 700px) { .fav-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .fav-card-actions { display: flex; gap: var(--sp-2); margin-top: var(--sp-3); }
+  .fav-card-actions .btn { flex: 1; }
+
+  .fav-empty { text-align: center; padding: var(--sp-24) var(--sp-6); }
+  .fav-empty-icon { font-size: 2.4rem; margin-bottom: var(--sp-4); opacity: 0.4; }
+
+  .fav-toolbar { display: flex; justify-content: flex-end; margin-bottom: var(--sp-6); }
+  .clear-all-link { font-size: 0.78rem; background-color: var(--surface); color:rgba(255, 255, 255, 0.548); width: fit-content; padding: 6px 12px; text-decoration: none; border-radius: 6px; cursor: pointer;}
+  .clear-all-link:hover { background-color: var(--error); color:rgba(255, 255, 255, 0.925) }
+
+  /* size-select mini-overlay for "move to cart" when item has multiple sizes */
+  .fav-size-pop {
+    position: absolute; inset: 0; background: rgba(10,10,11,.92); backdrop-filter: blur(4px);
+    display: none; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-3);
+    padding: var(--sp-4); border-radius: var(--radius-md); z-index: 5;
+  }
+  .fav-size-pop.open { display: flex; }
+  .fav-size-pop p { font-size: 0.74rem; color: var(--text-dim); letter-spacing: 0.04em; text-transform: uppercase; }
+  .fav-size-pop-sizes { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .fav-size-pop-sizes button { width: 34px; height: 32px; border: 1px solid var(--hairline); border-radius: var(--radius-sm); font-size: 0.74rem; color: var(--text); background: var(--surface); }
+  .fav-size-pop-sizes button:hover:not(.oos) { border-color: var(--gold); color: var(--gold); }
+  .fav-size-pop-sizes button.oos { color: var(--hairline); text-decoration: line-through; cursor: not-allowed; }
+  .fav-size-pop-close { font-size: 0.72rem; color: var(--text-dim); text-decoration: underline; cursor: pointer; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div id="h-nav-mount"></div>
+
+<div class="fav-header wrap">
+  <div>
+    <p class="eyebrow">Saved by you</p>
+    <h1 class="h-display-lg">Favorites</h1>
+  </div>
+  <span class="fav-count-pill" id="fav-count-pill">0 items</span>
+</div>
+
+<div class="fav-body">
+  <div class="fav-toolbar" id="fav-toolbar" style="display:none;">
+    <span class="clear-all-link" onclick="clearAllFavorites()">Clear all favorites</span>
+  </div>
+  <div id="fav-content"></div>
+</div>
+
+<div id="h-footer-mount"></div>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  hMountLayout();
+
+  function renderFavorites(){
+    const ids = HStore.getWishlist();
+    const content = document.getElementById('fav-content');
+    const pill = document.getElementById('fav-count-pill');
+    const toolbar = document.getElementById('fav-toolbar');
+
+    pill.textContent = `${ids.length} item${ids.length===1?'':'s'}`;
+    toolbar.style.display = ids.length > 0 ? 'flex' : 'none';
+
+    if (ids.length === 0){
+      content.innerHTML = `
+        <div class="fav-empty">
+          <div class="fav-empty-icon">♡</div>
+          <h2 class="h-display-md" style="margin-bottom:var(--sp-2);">No favorites yet</h2>
+          <p class="text-dim" style="margin-bottom:var(--sp-6);">Tap the heart icon on any product to save it here for later.</p>
+          <a href="shop.html" class="btn btn-gold">Browse the collection</a>
+        </div>`;
+      return;
+    }
+
+    const products = ids.map(id => hGetById(id)).filter(Boolean);
+
+    content.innerHTML = `<div class="fav-grid">${products.map(p => favCardHTML(p)).join('')}</div>`;
+  }
+
+  function favCardHTML(p){
+    const inStock = p.sizes.some(s => s.stock > 0);
+    return `
+    <div class="h-card" data-product="${p.id}" style="position:relative;">
+      <div class="h-card-img-wrap" onclick="window.location.href='product.html?slug=${p.slug}'">
+        <img src="${p.images[0]}" alt="${p.name}" loading="lazy"/>
+        <div class="h-card-tags">
+          ${p.isNew ? '<span class="h-tag new">New</span>' : ''}
+          ${p.compareAt ? '<span class="h-tag sale">Sale</span>' : ''}
+          ${!inStock ? '<span class="h-tag" style="background:var(--surface-3);color:var(--text-dim);">Sold out</span>' : ''}
+        </div>
+        <div class="fav-size-pop" id="size-pop-${p.id}">
+          <p>Select a size</p>
+          <div class="fav-size-pop-sizes">
+            ${p.sizes.map(s => `<button class="${s.stock===0?'oos':''}" ${s.stock===0?'disabled':''} onclick="event.stopPropagation(); confirmMoveToCart('${p.id}', '${s.label}')">${s.label}</button>`).join('')}
+          </div>
+          <span class="fav-size-pop-close" onclick="event.stopPropagation(); closeSizePop('${p.id}')">Cancel</span>
+        </div>
+      </div>
+      <button class="h-card-wishlist active" aria-label="Remove from favorites" onclick="removeFavorite(event, '${p.id}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="${'#D4AF37'}" stroke="#D4AF37" stroke-width="1.5"><path d="M12 20s-7-4.3-9.3-8.8C1.2 8 2.6 4.8 6 4.4c2-.2 3.6.9 6 3.4 2.4-2.5 4-3.6 6-3.4 3.4.4 4.8 3.6 3.3 6.8C19 15.7 12 20 12 20z"/></svg>
+      </button>
+      <div class="h-card-info">
+        <a href="product.html?slug=${p.slug}"><p class="h-card-name">${p.name}</p></a>
+        <div class="h-card-meta">
+          <span class="h-price">${hPrice(p.price)}${p.compareAt?`<span class="compare">${hPrice(p.compareAt)}</span>`:''}</span>
+          <span class="h-rating">★ ${p.rating}</span>
+        </div>
+        <div class="fav-card-actions">
+          <button class="btn btn-sm btn-gold" ${!inStock?'disabled style="opacity:.4;cursor:not-allowed;"':''} onclick="openSizePop('${p.id}')">${inStock ? 'Add to cart' : 'Sold out'}</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function removeFavorite(e, id){
+    e.preventDefault(); e.stopPropagation();
+    HStore.toggleWishlist(id);
+    HStore.toast('Removed from favorites', 'success');
+    renderFavorites();
+  }
+
+  function clearAllFavorites(){
+    if (!confirm('Remove all items from your favorites?')) return;
+    HStore.getWishlist().slice().forEach(id => HStore.toggleWishlist(id));
+    HStore.toast('Favorites cleared', 'success');
+    renderFavorites();
+  }
+
+  function openSizePop(id){
+    document.querySelectorAll('.fav-size-pop').forEach(el => el.classList.remove('open'));
+    document.getElementById('size-pop-'+id).classList.add('open');
+  }
+  function closeSizePop(id){
+    document.getElementById('size-pop-'+id).classList.remove('open');
+  }
+  function confirmMoveToCart(id, size){
+    const product = hGetById(id);
+    HStore.addToCart({ productId: id, size, color: product.colors[0].name, qty: 1, note: '' });
+    closeSizePop(id);
+    HStore.toast(`Added to cart in size ${size}`, 'success');
+  }
+
+  renderFavorites();
+</script>
+</body>
+</html>

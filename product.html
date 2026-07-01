@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title id="page-title">Product — HASSAN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/tokens.css"/>
+<link rel="stylesheet" href="css/layout.css"/>
+<link rel="stylesheet" href="css/product.css"/>
+<style>
+  .breadcrumbs { padding: var(--sp-4) var(--sp-6) 0; font-size: 0.76rem; color: var(--text-dim); }
+  .breadcrumbs a:hover { color: var(--gold); }
+  .pdp-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: var(--sp-12); padding: var(--sp-6) var(--sp-6) var(--sp-16); max-width: 1400px; margin: 0 auto; }
+
+  .pdp-gallery { display: grid; grid-template-columns: 84px 1fr; gap: var(--sp-3); position: sticky; top: 100px; align-self: start; }
+  .pdp-thumbs { display: flex; flex-direction: column; gap: var(--sp-2); }
+  .pdp-thumb { aspect-ratio: 3/4; border-radius: var(--radius-sm); overflow: hidden; border: 1.5px solid transparent; cursor: pointer; }
+  .pdp-thumb.active { border-color: var(--gold); }
+  .pdp-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .pdp-main-img { position: relative; aspect-ratio: 3/4; border-radius: var(--radius-md); overflow: hidden; background: var(--surface); cursor: zoom-in; }
+  .pdp-main-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.25s; }
+  .pdp-main-img.zoomed img { transform: scale(1.8); cursor: zoom-out; }
+  @media (max-width: 900px) { .pdp-gallery { grid-template-columns: 1fr; position: static; } .pdp-thumbs { flex-direction: row; overflow-x: auto; } .pdp-thumb { width: 64px; flex-shrink: 0; } }
+
+  .pdp-rating-row { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-4); font-size: 0.84rem; }
+  .pdp-rating-row .stars { color: var(--gold); letter-spacing: 1px; }
+  .pdp-price-row { display: flex; align-items: baseline; gap: var(--sp-3); margin-bottom: var(--sp-8); }
+  .pdp-price { font-family: var(--font-mono); font-size: 1.3rem; color: var(--gold); }
+  .pdp-compare { font-family: var(--font-mono); font-size: 1rem; color: var(--text-dim); text-decoration: line-through; }
+  .pdp-sale-pct { font-size: 0.78rem; color: var(--gold); font-weight: 600; }
+
+  .pdp-selector { margin-bottom: var(--sp-6); }
+  .pdp-selector-label { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; margin-bottom: var(--sp-3); }
+  .pdp-selector-label .link { font-weight: 400; color: var(--text-dim); text-decoration: underline; cursor: pointer; }
+  .pdp-colors { display: flex; gap: var(--sp-2); }
+  .pdp-color-swatch { width: 34px; height: 34px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+  .pdp-color-swatch.active { border-color: var(--gold); }
+  .pdp-sizes { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--sp-2); }
+  .pdp-size-btn { padding: 12px 0; border: 1px solid var(--hairline); border-radius: var(--radius-sm); font-size: 0.84rem; color: var(--text); transition: all var(--t-fast); position: relative; }
+  .pdp-size-btn:hover:not(.oos) { border-color: var(--gold); color: var(--gold); }
+  .pdp-size-btn.active { background: var(--gold); color: var(--void); border-color: var(--gold); font-weight: 700; }
+  .pdp-size-btn.oos { color: var(--hairline); cursor: not-allowed; }
+  .pdp-size-btn.oos::after { content:''; position:absolute; left:8%; right:8%; top:50%; height:1px; background: var(--hairline); }
+  .pdp-stock-note { font-size: 0.78rem; color: var(--text-dim); margin-top: var(--sp-2); }
+  .pdp-stock-note.low { color: var(--gold); }
+
+  .pdp-qty-row { display: flex; align-items: center; gap: var(--sp-4); margin-bottom: var(--sp-4); }
+  .qty-stepper { display: flex; align-items: center; border: 1px solid var(--hairline); border-radius: var(--radius-sm); }
+  .qty-stepper button { width: 38px; height: 42px; font-size: 1rem; color: var(--text); }
+  .qty-stepper span { width: 36px; text-align: center; font-family: var(--font-mono); font-size: 0.9rem; }
+
+  .pdp-note textarea { width: 100%; background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 0.84rem; color: var(--text); resize: vertical; min-height: 60px; margin-top: var(--sp-2); }
+  .pdp-note textarea::placeholder { color: var(--text-dim); }
+
+  .pdp-cta-row { display: flex; gap: var(--sp-3); margin: var(--sp-6) 0 var(--sp-8); }
+  .pdp-wishlist-btn { width: 52px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; border: 1px solid var(--hairline); border-radius: var(--radius-sm); transition: border-color var(--t-fast); }
+  .pdp-wishlist-btn.active { border-color: var(--gold); }
+  .pdp-wishlist-btn.active svg { fill: var(--gold); stroke: var(--gold); }
+
+  .pdp-accordion-item { border-top: 1px solid var(--hairline); }
+  .pdp-accordion-head { display: flex; justify-content: space-between; padding: var(--sp-4) 0; cursor: pointer; font-size: 0.86rem; font-weight: 600; }
+  .pdp-accordion-body { max-height: 0; overflow: hidden; transition: max-height var(--t-slow); font-size: 0.84rem; color: var(--text-dim); line-height: 1.7; }
+  .pdp-accordion-body.open { max-height: 220px; padding-bottom: var(--sp-4); }
+  .pdp-accordion-item:last-child { border-bottom: 1px solid var(--hairline); }
+
+  .pdp-reviews { max-width: 1400px; margin: 0 auto; padding: var(--sp-16) var(--sp-6); border-top: 1px solid var(--hairline); }
+  .review-summary { display: flex; gap: var(--sp-12); align-items: center; margin-bottom: var(--sp-8); }
+  .review-summary-score .num { font-family: var(--font-display); font-size: 3rem; }
+  .reviews-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-4); }
+  @media (max-width: 768px) { .reviews-list { grid-template-columns: 1fr; } .review-summary { flex-direction: column; align-items: flex-start; gap: var(--sp-4); } }
+
+  .related-section { padding: var(--sp-16) var(--sp-6); border-top: 1px solid var(--hairline); max-width: 1400px; margin: 0 auto; }
+  .related-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-4); margin-top: var(--sp-6); }
+  @media (max-width: 900px) { .related-grid { grid-template-columns: repeat(2, 1fr); } .pdp-grid { grid-template-columns: 1fr; gap: var(--sp-6); } }
+</style>
+</head>
+<body>
+
+<div id="h-nav-mount"></div>
+<div class="breadcrumbs wrap" id="breadcrumbs"></div>
+<div class="pdp-grid" id="pdp-root"></div>
+
+<section class="pdp-reviews">
+  <h2 class="h-display-lg" style="margin-bottom:var(--sp-6);">Customer Reviews</h2>
+  <div class="review-summary" id="review-summary"></div>
+  <div class="reviews-list" id="reviews-list"></div>
+</section>
+
+<section class="related-section">
+  <h2 class="h-display-lg">You may also like</h2>
+  <div class="related-grid" id="related-grid"></div>
+</section>
+
+<div id="h-footer-mount"></div>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/quickselect.js"></script>
+<script>
+  hMountLayout();
+
+  const slug = new URLSearchParams(window.location.search).get('slug');
+  const product = hGetBySlug(slug) || H_PRODUCTS[0];
+  document.getElementById('page-title').textContent = `${product.name} — HASSAN`;
+
+  let selectedColor = product.colors[0].name, selectedSize = null, qty = 1, activeImg = 0, note = '';
+
+  document.getElementById('breadcrumbs').innerHTML = `<a href="index.html">Home</a> / <a href="shop.html">Shop</a> / <a href="shop.html?cat=${product.category}">${product.category}</a> / <span>${product.name}</span>`;
+
+  function renderPDP(){
+    const wished = HStore.isWishlisted(product.id);
+    document.getElementById('pdp-root').innerHTML = `
+      <div class="pdp-gallery">
+        <div class="pdp-thumbs">${product.images.map((img,i)=>`<div class="pdp-thumb ${i===activeImg?'active':''}" onclick="setActiveImg(${i})"><img src="${img}" alt="${product.name} view ${i+1}"/></div>`).join('')}</div>
+        <div class="pdp-main-img" onclick="this.classList.toggle('zoomed')"><img src="${product.images[activeImg]}" alt="${product.name}"/></div>
+      </div>
+      <div class="pdp-info">
+        <p class="eyebrow">${product.category}</p>
+        <h1 class="h-display-lg">${product.name}</h1>
+        <div class="pdp-rating-row"><span class="stars">${'★'.repeat(Math.round(product.rating))}${'☆'.repeat(5-Math.round(product.rating))}</span><span class="text-dim">${product.rating} (${product.reviewCount} reviews)</span></div>
+        <div class="pdp-price-row"><span class="pdp-price">${hPrice(product.price)}</span>${product.compareAt?`<span class="pdp-compare">${hPrice(product.compareAt)}</span><span class="pdp-sale-pct">Save ${Math.round((1-product.price/product.compareAt)*100)}%</span>`:''}</div>
+
+        <div class="pdp-selector">
+          <div class="pdp-selector-label"><span>Color — ${selectedColor}</span></div>
+          <div class="pdp-colors">${product.colors.map(c=>`<button class="pdp-color-swatch ${c.name===selectedColor?'active':''}" style="background:${c.hex}" onclick="setColor('${c.name}')" aria-label="${c.name}"></button>`).join('')}</div>
+        </div>
+
+        <div class="pdp-selector">
+          <div class="pdp-selector-label"><span>Size${selectedSize?` — ${selectedSize}`:''}</span><span class="link" onclick="HStore.toast('Size guide coming soon')">Size guide</span></div>
+          <div class="pdp-sizes">${product.sizes.map(s=>`<button class="pdp-size-btn ${s.stock===0?'oos':''} ${selectedSize===s.label?'active':''}" ${s.stock===0?'disabled':''} onclick="setSize('${s.label}')">${s.label}</button>`).join('')}</div>
+          ${renderStockNote()}
+        </div>
+
+        <div class="pdp-qty-row">
+          <span class="pdp-selector-label" style="margin:0;">Quantity</span>
+          <div class="qty-stepper"><button onclick="changeQty(-1)">–</button><span>${qty}</span><button onclick="changeQty(1)">+</button></div>
+        </div>
+
+        <div class="pdp-selector pdp-note">
+          <div class="pdp-selector-label"><span>Note for this item</span></div>
+          <textarea placeholder="e.g. gift wrap, alteration request, delivery instructions..." oninput="note=this.value">${note}</textarea>
+        </div>
+
+        <div class="pdp-cta-row">
+          <button class="btn btn-gold btn-block" onclick="handleAddToCart()">Add to cart — ${hPrice(product.price*qty)}</button>
+          <button class="pdp-wishlist-btn ${wished?'active':''}" onclick="handleWishlist()" aria-label="Wishlist">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEDED" stroke-width="1.5"><path d="M12 20s-7-4.3-9.3-8.8C1.2 8 2.6 4.8 6 4.4c2-.2 3.6.9 6 3.4 2.4-2.5 4-3.6 6-3.4 3.4.4 4.8 3.6 3.3 6.8C19 15.7 12 20 12 20z"/></svg>
+          </button>
+        </div>
+
+        <div class="pdp-accordions">
+          <div class="pdp-accordion-item"><div class="pdp-accordion-head" onclick="toggleAcc(this)">Product Details <span>+</span></div><div class="pdp-accordion-body">${product.description}</div></div>
+          <div class="pdp-accordion-item"><div class="pdp-accordion-head" onclick="toggleAcc(this)">Shipping <span>+</span></div><div class="pdp-accordion-body">Free standard shipping on orders over $200. Express delivery available at checkout. Orders ship within 1–2 business days.</div></div>
+          <div class="pdp-accordion-item"><div class="pdp-accordion-head" onclick="toggleAcc(this)">Returns <span>+</span></div><div class="pdp-accordion-body">Free returns within 30 days. Items must be unworn with tags attached.</div></div>
+        </div>
+      </div>`;
+  }
+  function renderStockNote(){
+    if (!selectedSize) return `<p class="pdp-stock-note">Select a size to see availability.</p>`;
+    const s = product.sizes.find(s=>s.label===selectedSize);
+    if (!s || s.stock===0) return `<p class="pdp-stock-note low">Out of stock in this size.</p>`;
+    if (s.stock<=4) return `<p class="pdp-stock-note low">Only ${s.stock} left.</p>`;
+    return `<p class="pdp-stock-note">In stock — ready to ship.</p>`;
+  }
+  function setActiveImg(i){ activeImg=i; renderPDP(); }
+  function setColor(name){ selectedColor=name; renderPDP(); }
+  function setSize(label){ const s=product.sizes.find(s=>s.label===label); if(s.stock===0) return; selectedSize=label; renderPDP(); }
+  function changeQty(d){ qty=Math.max(1,qty+d); renderPDP(); }
+  function toggleAcc(headEl){
+    const body = headEl.nextElementSibling; const willOpen = !body.classList.contains('open');
+    document.querySelectorAll('.pdp-accordion-body').forEach(b=>b.classList.remove('open'));
+    document.querySelectorAll('.pdp-accordion-head span').forEach(s=>s.textContent='+');
+    if (willOpen){ body.classList.add('open'); headEl.querySelector('span').textContent='–'; }
+  }
+  function handleAddToCart(){
+    if (!selectedSize){ HStore.toast('Please select a size','error'); return; }
+    const s = product.sizes.find(s=>s.label===selectedSize);
+    if (s.stock===0){ HStore.toast('That size is out of stock','error'); return; }
+    HStore.addToCart({ productId: product.id, size: selectedSize, color: selectedColor, qty, note });
+    HStore.toast('Added to cart','success');
+  }
+  function handleWishlist(){ const now=HStore.toggleWishlist(product.id); HStore.toast(now?'Added to wishlist':'Removed from wishlist','success'); renderPDP(); }
+  renderPDP();
+
+  document.getElementById('review-summary').innerHTML = `
+    <div class="review-summary-score">
+      <div class="num">${product.rating}</div>
+      <div class="stars" style="color:var(--gold);">${'★'.repeat(Math.round(product.rating))}${'☆'.repeat(5-Math.round(product.rating))}</div>
+      <div class="text-dim" style="font-size:.78rem;margin-top:4px;">${product.reviewCount} reviews</div>
+    </div>
+    <div style="flex:1;">
+      ${[5,4,3,2,1].map(n=>{ const pct=n===5?60:n===4?25:n===3?9:n===2?4:2;
+        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:.76rem;">
+          <span style="width:42px;color:var(--text-dim);">${n} star</span>
+          <div style="flex:1;height:6px;background:var(--hairline);border-radius:4px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:var(--gold);"></div></div>
+          <span style="width:30px;color:var(--text-dim);text-align:right;">${pct}%</span></div>`; }).join('')}
+    </div>`;
+  document.getElementById('reviews-list').innerHTML = H_REVIEWS.map(r => `
+    <div style="border:1px solid var(--hairline);border-radius:var(--radius-md);padding:var(--sp-6);background:var(--surface);">
+      <div style="color:var(--gold);margin-bottom:8px;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+      <p style="font-size:.86rem;line-height:1.65;margin-bottom:12px;">"${r.body}"</p>
+      <p style="font-size:.78rem;font-weight:600;color:var(--text-dim);">${r.name} <span style="font-weight:400;">· Verified buyer</span></p>
+    </div>`).join('');
+
+  function relatedCardHTML(p){
+    return `<div class="h-card" data-product="${p.id}">
+      <div class="h-card-img-wrap" onclick="window.location.href='product.html?slug=${p.slug}'"><img src="${p.images[0]}" alt="${p.name}" loading="lazy"/></div>
+      <div class="h-card-info"><a href="product.html?slug=${p.slug}"><p class="h-card-name">${p.name}</p></a>
+      <div class="h-card-meta"><span class="h-price">${hPrice(p.price)}</span><span class="h-rating">★ ${p.rating}</span></div></div>
+    </div>`;
+  }
+  document.getElementById('related-grid').innerHTML = hGetRelated(product,4).map(relatedCardHTML).join('');
+</script>
+</body>
+</html>
