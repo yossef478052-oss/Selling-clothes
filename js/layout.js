@@ -37,8 +37,9 @@ function hNavbar(){
 
   <!-- Mobile drawer -->
   <div class="h-drawer" id="h-drawer">
-    <div class="h-drawer-head"><span class="h-logo">HASSAN</span><button id="h-drawer-close" aria-label="Close">✕</button></div>
+    <div class="h-drawer-head"><span class="h-logo">Logo</span><button id="h-drawer-close" aria-label="Close">✕</button></div>
     <div class="h-drawer-section">
+        <a href="index.html?cat=outerwear" class="h-drawer-link">Home</a>
       <a href="shop.html?cat=outerwear" class="h-drawer-link">Outerwear</a>
       <a href="shop.html?cat=shirts" class="h-drawer-link">Shirts</a>
       <a href="shop.html?cat=knitwear" class="h-drawer-link">Knitwear</a>
@@ -48,7 +49,8 @@ function hNavbar(){
     </div>
     <div class="h-drawer-section">
       <a href="account.html" class="h-drawer-link">Account</a>
-      <a href="account.html?tab=orders" class="h-drawer-link">Track Order</a>
+      <a href="wishlist.html?tab=orders" class="h-drawer-link">Favorites</a>
+      <a href="cart.html?tab=orders" class="h-drawer-link">Card</a>
     </div>
   </div>
   <div class="h-drawer-overlay" id="h-drawer-overlay"></div>
